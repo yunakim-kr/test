@@ -419,17 +419,20 @@ button:active,.job-chip:active,.chip.tagbtn:active{transform:scale(.96);}
 .gap-state.lack{color:var(--cmp-a);}
 .dev-item{padding:8px 0;border-bottom:1px dashed var(--border);font-size:13px;}
 .dev-item ul{margin:4px 0 0;padding-left:18px;font-size:12.6px;color:var(--text-muted);}
-#print-report{display:none;}
+/* PDF 보고서: 화면 밖에 고정 폭으로 렌더링해 html2pdf가 캡처한다(모바일 포함). 인쇄창은 라이브러리 로드 실패 시 대체 수단. */
+#print-report{position:fixed;left:-10000px;top:0;}
+#print-report .pr-page{width:720px;box-sizing:border-box;padding:24px;background:#fff;color:#000;font-size:12px;line-height:1.55;font-family:inherit;}
+#print-report h1{font-size:20px;margin:0 0 4px;border-bottom:2px solid #000;padding-bottom:6px;}
+#print-report h2{font-size:14px;margin:16px 0 6px;}
+#print-report .pr-meta{color:#555;margin-bottom:10px;}
+#print-report table{width:100%;border-collapse:collapse;margin-bottom:8px;page-break-inside:avoid;}
+#print-report th,#print-report td{border:1px solid #888;padding:4px 8px;text-align:left;vertical-align:top;background:#fff;color:#000;}
+#print-report th{background:#eee;}
+#print-report .pr-note{margin-top:14px;color:#555;font-size:11px;}
 @media print{
   body.printing-report > *:not(#print-report){display:none !important;}
-  body.printing-report #print-report{display:block !important;color:#000;background:#fff;font-size:12px;line-height:1.55;}
-  #print-report h1{font-size:20px;margin:0 0 4px;border-bottom:2px solid #000;padding-bottom:6px;}
-  #print-report h2{font-size:14px;margin:16px 0 6px;}
-  #print-report .pr-meta{color:#555;margin-bottom:10px;}
-  #print-report table{width:100%;border-collapse:collapse;margin-bottom:8px;page-break-inside:avoid;}
-  #print-report th,#print-report td{border:1px solid #888;padding:4px 8px;text-align:left;vertical-align:top;}
-  #print-report th{background:#eee;}
-  #print-report .pr-note{margin-top:14px;color:#555;font-size:11px;}
+  body.printing-report #print-report{position:static;}
+  body.printing-report #print-report .pr-page{width:auto;padding:0;}
   @page{size:A4;margin:16mm;}
 }
 .btn-secondary{background:var(--surface);color:var(--primary);border:1.5px solid var(--primary);border-radius:8px;padding:8px 16px;font-weight:700;font-size:13.5px;}
@@ -1513,8 +1516,17 @@ function renderDiagResult(){
     </div>`;
 }
 
-/* 진단 결과 PDF: 인쇄 전용 보고서를 만들어 브라우저 인쇄창(PDF로 저장)을 연다 */
-function downloadResultPdf(){
+function loadHtml2Pdf(){
+  if(window.html2pdf) return Promise.resolve();
+  return new Promise((res,rej)=>{
+    const sc = document.createElement('script');
+    sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+    sc.onload = res; sc.onerror = () => rej(new Error('html2pdf 로드 실패'));
+    document.head.appendChild(sc);
+  });
+}
+/* 진단 결과 PDF: 보고서를 만들어 PDF 파일로 직접 저장한다(html2pdf, 실패 시 인쇄창) */
+async function downloadResultPdf(){
   const job = jobById(diagJobId);
   if(!job || diagItems.every(it=>diagLevels[it.tag]===undefined)){ alert('목표 직무를 선택하고 진단 항목에 응답해 주세요.'); return; }
   const esc = s => String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -1524,7 +1536,7 @@ function downloadResultPdf(){
   const dateStr = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')}`;
   let el = document.getElementById('print-report');
   if(!el){ el = document.createElement('div'); el.id = 'print-report'; document.body.appendChild(el); }
-  el.innerHTML = `
+  el.innerHTML = `<div class="pr-page">
     <h1>정보보호 직무역량 진단 결과</h1>
     <div class="pr-meta">목표 직무: ${esc(job.name)} (${esc(famById(job.family).name)}) · 진단일: ${dateStr} · 진단 방식: 자기진단(Level 1)${d.unanswered? ` · 미응답 ${d.unanswered}개(경험 없음으로 계산)`:''}</div>
     <h2>1. 요약</h2>
@@ -1538,11 +1550,23 @@ function downloadResultPdf(){
     <h2>4. 인접·상위 직무 이동 가능성</h2>
     <table><tr><th>직무</th><th style="width:60px;">충족률</th><th>우선 보완</th></tr>
     ${career.map(c=>`<tr><td>${esc(c.job.name)}</td><td>${c.pct}%</td><td>${c.need.length? c.need.map(r=>`${esc(r.tag)}(Lv.${r.target})`).join(', ') : '충족'}${c.unrated? ` (미진단 ${c.unrated}개)`:''}</td></tr>`).join('')}</table>
-    <div class="pr-note">본 결과는 자기진단 기반의 프로토타입 산출물이며 공식 평가·인증 결과가 아닙니다. 요구 숙련도는 예시 기준값이며 전문가 검증이 필요합니다.</div>`;
-  document.body.classList.add('printing-report');
-  const cleanup = () => { document.body.classList.remove('printing-report'); window.removeEventListener('afterprint', cleanup); };
-  window.addEventListener('afterprint', cleanup);
-  window.print(); // 인쇄창에서 대상을 "PDF로 저장"으로 선택
+    <div class="pr-note">본 결과는 자기진단 기반의 프로토타입 산출물이며 공식 평가·인증 결과가 아닙니다. 요구 숙련도는 예시 기준값이며 전문가 검증이 필요합니다.</div></div>`;
+  const fname = `역량진단결과_${job.name}_${dateStr.replace(/\./g,'')}.pdf`;
+  try{
+    await loadHtml2Pdf();
+    await html2pdf().set({
+      margin:10, filename:fname, image:{type:'jpeg',quality:.95},
+      html2canvas:{scale:2, useCORS:true, backgroundColor:'#fff', windowWidth:720},
+      jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
+      pagebreak:{mode:['css','legacy'], avoid:'table'}
+    }).from(el.firstElementChild).save();
+  }catch(e){
+    // 라이브러리 로드·생성 실패 시 브라우저 인쇄창으로 대체
+    document.body.classList.add('printing-report');
+    const cleanup = () => { document.body.classList.remove('printing-report'); window.removeEventListener('afterprint', cleanup); };
+    window.addEventListener('afterprint', cleanup);
+    window.print();
+  }
 }
 
 /* ===================== 직무 비교 ===================== */
