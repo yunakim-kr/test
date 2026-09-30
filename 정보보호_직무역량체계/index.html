@@ -382,6 +382,56 @@ button:active,.job-chip:active,.chip.tagbtn:active{transform:scale(.96);}
 .compare-select-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;}
 .compare-select-row select{flex:1;min-width:180px;padding:9px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);}
 .btn-primary{background:var(--primary);color:var(--on-brand);border:none;border-radius:8px;padding:9px 18px;font-weight:700;font-size:14px;}
+.diag-h{margin:0 0 8px;font-size:16px;color:var(--primary-strong);}
+.diag-sub{margin:16px 0 8px;font-size:13.5px;color:var(--primary);}
+.diag-warn{margin:8px 0 0;padding:8px 12px;border-radius:8px;background:var(--cmp-a-bg);color:var(--cmp-a);font-size:12.6px;}
+.diag-stages{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;}
+.diag-stage{border:1.5px dashed var(--border);border-radius:10px;padding:10px 12px;color:var(--text-muted);}
+.diag-stage.on{border:1.5px solid var(--primary);color:var(--text);background:var(--accent-soft);}
+.diag-stage-n{display:block;font-family:var(--font-mono);font-size:11px;letter-spacing:.04em;margin-bottom:2px;}
+.diag-stage b{display:block;font-size:13.5px;}
+.diag-stage p{margin:4px 0 0;font-size:12px;}
+.diag-details{margin-top:14px;font-size:13px;}
+.diag-details summary{cursor:pointer;font-weight:700;color:var(--primary);}
+.diag-scale{width:100%;border-collapse:collapse;margin-top:8px;font-size:12.5px;}
+.diag-scale th,.diag-scale td{border:1px solid var(--border);padding:6px 10px;text-align:left;vertical-align:top;}
+.diag-scale th{background:var(--surface-alt);}
+.diag-row{padding:12px 0;border-top:1px dashed var(--border);}
+.diag-row-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;}
+.diag-tag{font-weight:700;color:var(--primary-strong);font-size:14px;}
+.diag-target{font-family:var(--font-mono);font-size:11.5px;color:var(--on-brand);background:var(--primary);border-radius:999px;padding:2px 10px;}
+.lvbtns{display:flex;gap:6px;flex-wrap:wrap;}
+.lvbtn{min-width:44px;border:1.5px solid var(--border);background:var(--surface);color:var(--text-muted);border-radius:8px;padding:6px 10px;font-weight:700;font-size:13px;}
+.lvbtn:hover{border-color:var(--primary);}
+.lvbtn[aria-pressed="true"]{background:var(--primary);color:var(--on-brand);border-color:var(--primary);}
+.diag-bars{margin:8px 0;font-size:12.8px;color:var(--text);}
+.diag-evi{width:100%;box-sizing:border-box;border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:12.5px;background:var(--surface);color:var(--text);}
+.gap-row{display:grid;grid-template-columns:minmax(120px,220px) 1fr 44px 60px;align-items:center;gap:10px;margin-bottom:8px;font-size:12.8px;}
+@media (max-width:560px){.gap-row{grid-template-columns:100px 1fr 38px 52px;font-size:12px;}}
+.gap-track{position:relative;height:10px;border-radius:5px;background:var(--surface-alt);}
+.gap-fill{position:absolute;left:0;top:0;bottom:0;border-radius:5px;transition:width .5s cubic-bezier(.2,.7,.2,1);}
+.gap-fill.ok{background:var(--accent);}
+.gap-fill.lack{background:var(--cmp-a);}
+.gap-mark{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--text);margin-left:-1px;}
+.gap-num{font-family:var(--font-mono);color:var(--text-muted);text-align:right;}
+.gap-state{font-size:11.5px;font-weight:700;text-align:center;}
+.gap-state.ok{color:var(--accent);}
+.gap-state.lack{color:var(--cmp-a);}
+.dev-item{padding:8px 0;border-bottom:1px dashed var(--border);font-size:13px;}
+.dev-item ul{margin:4px 0 0;padding-left:18px;font-size:12.6px;color:var(--text-muted);}
+#print-report{display:none;}
+@media print{
+  body.printing-report > *:not(#print-report){display:none !important;}
+  body.printing-report #print-report{display:block !important;color:#000;background:#fff;font-size:12px;line-height:1.55;}
+  #print-report h1{font-size:20px;margin:0 0 4px;border-bottom:2px solid #000;padding-bottom:6px;}
+  #print-report h2{font-size:14px;margin:16px 0 6px;}
+  #print-report .pr-meta{color:#555;margin-bottom:10px;}
+  #print-report table{width:100%;border-collapse:collapse;margin-bottom:8px;page-break-inside:avoid;}
+  #print-report th,#print-report td{border:1px solid #888;padding:4px 8px;text-align:left;vertical-align:top;}
+  #print-report th{background:#eee;}
+  #print-report .pr-note{margin-top:14px;color:#555;font-size:11px;}
+  @page{size:A4;margin:16mm;}
+}
 .btn-secondary{background:var(--surface);color:var(--primary);border:1.5px solid var(--primary);border-radius:8px;padding:8px 16px;font-weight:700;font-size:13.5px;}
 .tbl-wrap{overflow-x:auto;}
 table.cmp-table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13.5px;min-width:520px;}
@@ -607,32 +657,21 @@ footer{border-top:1px solid var(--border);margin-top:40px;padding-block:26px;pad
 <!-- ================= SKILLS ================= -->
 <section class="page" id="page-skills">
   <h2 class="section-title">역량 진단</h2>
-  <p class="section-sub">태그를 클릭할 때마다 "경험 없음 → 학습 중 → 실무 가능 → 능숙" 4단계로 나의 보유 수준이 바뀝니다. 실제 보유 수준을 표시하면, 직무군별 준비도와 나에게 맞는 직무를 자동으로 진단합니다.</p>
+  <p class="section-sub">목표 직무를 고르면 <b>직무 → 요구역량 → 숙련도 수준 → 현재 수준 → 역량격차 → 개발방안</b>이 하나의 흐름으로 이어집니다. 점수를 매기는 진단이 아니라, 직무가 요구하는 숙련도와 나의 실제 수행수준의 차이(Gap)를 확인하고 교육·경력개발로 연결합니다.</p>
   <div class="card" style="margin-bottom:18px;">
-    <div class="level-legend">
-      <span class="level-legend-title">진단 척도</span>
-      <span class="level-legend-item" data-lv="0"><i></i>경험 없음</span>
-      <span class="level-legend-item" data-lv="1"><i></i>학습 중</span>
-      <span class="level-legend-item" data-lv="2"><i></i>실무 가능</span>
-      <span class="level-legend-item" data-lv="3"><i></i>능숙</span>
-      <span class="level-legend-hint">(태그를 클릭해 순환 · 크기는 요구 빈도)</span>
-    </div>
-    <h4 style="margin:0 0 8px;font-size:13.5px;color:var(--primary);">역량 태그</h4>
-    <div class="tag-row" id="competency-tags"></div>
-    <h4 style="margin:16px 0 8px;font-size:13.5px;color:var(--primary);">지식·기술 태그</h4>
-    <div class="tag-row" id="knowledge-tags"></div>
-    <div class="skill-controls">
-      <div class="mode-toggle" role="group" aria-label="매칭 기준">
-        <button type="button" data-mode="OR" aria-pressed="true" onclick="setMatchMode('OR')">하나라도 보유</button>
-        <button type="button" data-mode="AND" aria-pressed="false" onclick="setMatchMode('AND')">모든 항목 보유</button>
-      </div>
-      <span class="selected-count"><b id="selected-skill-count">0</b>/<span id="total-skill-count">0</span>개 진단됨</span>
-      <button type="button" class="btn-secondary" onclick="clearSkillSelection()">진단 초기화</button>
-    </div>
+    <h3 class="diag-h">1. 목표 직무 선택</h3>
+    <select id="diag-job" onchange="startDiagnosis()" aria-label="목표 직무"></select>
+    <p id="diag-job-desc" class="section-sub" style="margin:8px 0 0;"></p>
+    <h4 class="diag-sub">진단 깊이 (3단계)</h4>
+    <div class="diag-stages" id="diag-stages"></div>
+    <details class="diag-details">
+      <summary>숙련도 척도 보기 (행동기준척도, 5단계)</summary>
+      <table class="diag-scale" id="diag-scale"></table>
+      <p class="section-sub" style="font-size:12px;margin:6px 0 0;">수행의 복잡성·자율성·책임범위·문제해결 수준을 기준으로 정의했습니다. 각 항목에는 이 기준이 항목명에 맞춰 적용되며, 항목별 세부 행동지표는 전문가 검증을 거쳐 순차 보강합니다.</p>
+    </details>
   </div>
-  <div id="skill-profile" hidden></div>
-  <h3 style="margin:0 0 10px;color:var(--primary-strong);font-size:16px;">나에게 맞는 직무</h3>
-  <div id="skill-search-result"></div>
+  <div id="diag-form"></div>
+  <div id="diag-result"></div>
 </section>
 
 <!-- ================= COMPARE ================= -->
@@ -1144,7 +1183,7 @@ function goSearch(term){
 function renderHome(){
   const svcs = [
     {t:'직무 찾기',d:'내가 관심 있는 정보보호 직무를 탐색합니다.',tab:'jobs',ic:'search'},
-    {t:'역량 진단',d:'보유 역량 수준을 진단하고 맞춤 직무를 추천받습니다.',tab:'skills',ic:'gauge'},
+    {t:'역량 진단',d:'목표 직무 대비 역량 격차를 진단하고 개발방안을 추천받습니다.',tab:'skills',ic:'gauge'},
     {t:'직무 비교',d:'직무별 수행업무와 필요역량을 비교합니다.',tab:'compare',ic:'shuffle'},
     {t:'경력경로',d:'현재 직무에서 목표 직무까지 필요 역량을 확인합니다.',tab:'career',ic:'route'},
     {t:'교육 활용',d:'직무역량 기반으로 교육과정을 설계·점검합니다.',tab:'edu',ic:'cap'}
@@ -1279,128 +1318,231 @@ function closeModal(){ document.getElementById('job-modal').classList.remove('op
 document.getElementById('job-modal').addEventListener('click', e=>{ if(e.target.id==='job-modal') closeModal(); });
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
 
-/* ===================== 역량 진단 ===================== */
+/* ===================== 역량 진단 (직무 → 요구역량 → 숙련도 → 현재수준 → 격차 → 개발방안) ===================== */
 function uniqueTags(field){
   const s = new Set(); JOBS.forEach(j=>j[field].forEach(t=>s.add(t))); return [...s].sort();
 }
-function tagFreq(tag){
-  return JOBS.filter(j=>j.comp.includes(tag)||j.ks.includes(tag)).length;
-}
-const LEVEL_LABELS = ['경험 없음','학습 중','실무 가능','능숙'];
-const LEVEL_REQUIRED = 2; // 직무가 요구하는 기본 수준 = 실무 가능
-let userLevels = {};      // { 태그: 1~3 } (0은 저장하지 않음 = 미보유)
-let matchMode = 'OR';
+const DIAG_LEVELS = [
+  {lv:1, name:'기초',   gen:'정해진 절차·지침에 따라 「{X}」 관련 기본 업무를 상급자의 지도 하에 수행한다'},
+  {lv:2, name:'초급',   gen:'표준 절차에 따라 「{X}」 업무를 대부분 독립적으로 수행하며, 예외 상황은 상급자에게 문의·보고한다'},
+  {lv:3, name:'중급',   gen:'「{X}」 업무를 독립적으로 수행하고, 여러 정보를 연계·판단하여 문제를 해결한다'},
+  {lv:4, name:'상급',   gen:'복합·비정형 상황에서 「{X}」 대응 전략을 수립하고, 팀·유관부서의 수행을 조정·지도한다'},
+  {lv:5, name:'전문가', gen:'조직 차원의 「{X}」 체계·기준을 설계·개선하며, 그 결과에 책임을 진다'}
+];
+/* 항목별 행동기준(BARS). 없으면 위 공통 기준을 항목명에 적용한다. 전문가 검증을 거쳐 항목별로 추가해 나갈 것. */
+const DIAG_BARS = {
+  '로그 분석': [
+    '정해진 절차에 따라 기본 로그를 확인한다',
+    '로그에서 주요 이상징후를 식별한다',
+    '복수의 로그를 연계하여 사고 원인을 분석한다',
+    '복합 사고에 대한 분석·대응 전략을 수립하고 팀의 분석을 조정한다',
+    '조직 차원의 로그 분석·사고대응 체계를 설계·개선한다'
+  ]
+};
+const DIAG_TARGET_CORE = 4;   // 직무 핵심 항목(역량·지식기술 각 앞 2개) 요구 수준
+const DIAG_TARGET_BASE = 3;   // 그 외 항목 요구 수준
+const DIAG_EVAL_STAGES = [
+  {n:'Level 1', t:'자기진단', d:'직무별 역량에 대한 본인의 수행수준을 행동기준으로 빠르게 확인합니다.', on:true},
+  {n:'Level 2', t:'지식·사례·시나리오 평가', d:'객관식·사례형·시나리오형 문항으로 지식과 판단능력을 검증합니다.', on:false},
+  {n:'Level 3', t:'실무과제·포트폴리오·전문가 평가', d:'고숙련 인력의 실제 수행능력을 과제·증빙·전문가 평가로 검증합니다.', on:false}
+];
 
-function levelDots(lv){
-  let s='';
-  for(let i=1;i<=3;i++) s += `<i class="lv-dot ${i<=lv?'on':''}"></i>`;
-  return `<span class="lv-dots">${s}</span>`;
+let diagJobId = '';
+let diagItems = [];        // [{tag, kind:'comp'|'ks', target}]
+let diagLevels = {};       // { 태그: 0~5 }  (0 = 경험 없음, 미응답은 키 없음)
+let diagEvidence = {};     // { 태그: 증빙 메모 }
+
+function diagBars(tag, lv){
+  if(DIAG_BARS[tag]) return DIAG_BARS[tag][lv-1];
+  return DIAG_LEVELS[lv-1].gen.replace('{X}', tag);
 }
-function cycleLevel(tag){
-  const cur = userLevels[tag]||0;
-  const next = (cur+1)%4;
-  if(next===0) delete userLevels[tag]; else userLevels[tag]=next;
-  renderSkillTags();
+function diagBuildItems(job){
+  const mk = (arr, kind) => arr.map((tag,i)=>({tag, kind, target: i<2 ? DIAG_TARGET_CORE : DIAG_TARGET_BASE}));
+  return [...mk(job.comp,'comp'), ...mk(job.ks,'ks')];
 }
-function renderSkillTags(){
-  const compTags = uniqueTags('comp'), ksTags = uniqueTags('ks');
-  const allTags = [...compTags, ...ksTags];
-  const maxFreq = Math.max(...allTags.map(tagFreq), 1);
-  const sizeFor = t => (12 + (tagFreq(t)/maxFreq)*5).toFixed(1);
-  const renderGroup = tags => tags.map(t=>{
-    const lv = userLevels[t]||0;
-    return `<button type="button" class="chip tagbtn" data-lv="${lv}" style="font-size:${sizeFor(t)}px" title="${LEVEL_LABELS[lv]} · ${tagFreq(t)}개 직무에서 요구 · 클릭하면 수준이 바뀝니다" onclick="cycleLevel('${t.replace(/'/g,"\\'")}')">${t}${levelDots(lv)}</button>`;
-  }).join('');
-  document.getElementById('competency-tags').innerHTML = renderGroup(compTags);
-  document.getElementById('knowledge-tags').innerHTML = renderGroup(ksTags);
-  document.getElementById('total-skill-count').textContent = allTags.length;
-  renderSkillProfile();
-  renderSkillMatches();
+function initDiagnosis(){
+  const sel = document.getElementById('diag-job');
+  sel.innerHTML = '<option value="">목표 직무를 선택하세요</option>' +
+    FAMILIES.map(f=>`<optgroup label="${f.name}">${JOBS.filter(j=>j.family===f.id).map(j=>`<option value="${j.id}">${j.name}</option>`).join('')}</optgroup>`).join('');
+  document.getElementById('diag-stages').innerHTML = DIAG_EVAL_STAGES.map(s=>`
+    <div class="diag-stage ${s.on?'on':''}"><span class="diag-stage-n">${s.n}${s.on?' · 이용 중':' · 준비 중'}</span><b>${s.t}</b><p>${s.d}</p></div>`).join('');
+  document.getElementById('diag-scale').innerHTML = `<tr><th>수준</th><th>행동기준(공통)</th></tr>` +
+    DIAG_LEVELS.map(l=>`<tr><td><b>Lv.${l.lv}</b> ${l.name}</td><td>${l.gen.replace('「{X}」','해당 역량·지식')}</td></tr>`).join('');
+  startDiagnosis();
 }
-function clearSkillSelection(){
-  userLevels = {};
-  renderSkillTags();
+function startDiagnosis(){
+  diagJobId = document.getElementById('diag-job').value;
+  const job = jobById(diagJobId);
+  const form = document.getElementById('diag-form');
+  const desc = document.getElementById('diag-job-desc');
+  if(!job){
+    diagItems = [];
+    desc.textContent = '';
+    form.innerHTML = '<p class="empty-msg">목표 직무를 선택하면 해당 직무의 요구역량과 요구 숙련도가 표시됩니다.</p>';
+    renderDiagResult();
+    return;
+  }
+  diagItems = diagBuildItems(job);
+  desc.innerHTML = `<b>${job.name}</b> — ${job.oneLiner}`;
+  form.innerHTML = `
+    <div class="card">
+      <h3 class="diag-h">현재 수행수준 자가진단</h3>
+      <p class="section-sub" style="margin-bottom:12px;">각 항목에서 <b>지금 실제로 수행할 수 있는 수준</b>을 행동기준으로 골라주세요. 아는 것이 아니라 <b>할 수 있는 것</b>을 기준으로 응답합니다. 증빙(자격·프로젝트·경력)은 선택 입력이며 결과서에 함께 표시됩니다.</p>
+      ${['comp','ks'].map(kind=>`
+        <h4 class="diag-sub">${kind==='comp'?'요구 역량':'요구 지식·기술'}</h4>
+        ${diagItems.map((it,i)=>it.kind===kind ? `<div class="diag-row" id="diag-row-${i}">${diagRowHtml(i)}</div>` : '').join('')}`).join('')}
+      <div class="skill-controls">
+        <span class="selected-count"><b id="diag-answered">0</b>/${diagItems.length}개 응답</span>
+        <button type="button" class="btn-secondary" onclick="resetDiagnosis()">응답 초기화</button>
+      </div>
+    </div>`;
+  renderDiagResult();
 }
-function setMatchMode(mode){
-  matchMode = mode;
-  document.querySelectorAll('.mode-toggle button').forEach(b=>b.setAttribute('aria-pressed', b.dataset.mode===mode?'true':'false'));
-  renderSkillMatches();
+function diagRowHtml(i){
+  const it = diagItems[i];
+  const cur = diagLevels[it.tag];
+  const btns = [0,1,2,3,4,5].map(lv=>`<button type="button" class="lvbtn" aria-pressed="${cur===lv}" onclick="setDiagLevel(${i},${lv})" title="${lv===0?'경험 없음':DIAG_LEVELS[lv-1].name}">${lv===0?'없음':lv}</button>`).join('');
+  const shown = cur===undefined ? '' : (cur===0 ? '수행 경험이 없습니다.' : diagBars(it.tag, cur));
+  return `
+    <div class="diag-row-head">
+      <span class="diag-tag">${it.tag}</span>
+      <span class="diag-target">요구 Lv.${it.target}</span>
+    </div>
+    <div class="lvbtns" role="group" aria-label="${it.tag} 현재 수준">${btns}</div>
+    <div class="diag-bars">${cur===undefined ? `<span class="empty-msg" style="padding:0;">수준을 선택하세요. (요구 수준 Lv.${it.target}: ${diagBars(it.tag,it.target)})</span>` : `<b>${cur===0?'경험 없음':`Lv.${cur} ${DIAG_LEVELS[cur-1].name}`}</b> · ${shown}`}</div>
+    <input type="text" class="diag-evi" maxlength="120" placeholder="증빙(선택): 자격·프로젝트·업무경험 등" value="${(diagEvidence[it.tag]||'').replace(/"/g,'&quot;')}" oninput="setDiagEvidence(${i}, this.value)">`;
 }
-function jobReadiness(job){
-  const tags = [...job.comp, ...job.ks];
-  let sum = 0;
-  const met=[], partial=[], none=[];
-  tags.forEach(t=>{
-    const lv = userLevels[t]||0;
-    sum += Math.min(lv, LEVEL_REQUIRED)/LEVEL_REQUIRED;
-    if(lv>=LEVEL_REQUIRED) met.push(t);
-    else if(lv>0) partial.push({t,lv});
-    else none.push(t);
+function setDiagLevel(i, lv){
+  diagLevels[diagItems[i].tag] = lv;
+  const row = document.getElementById('diag-row-'+i);
+  const evi = row.querySelector('.diag-evi').value;
+  row.innerHTML = diagRowHtml(i);
+  row.querySelector('.diag-evi').value = evi;
+  renderDiagResult();
+}
+function setDiagEvidence(i, v){ diagEvidence[diagItems[i].tag] = v; renderDiagResult(); }
+function resetDiagnosis(){
+  diagLevels = {}; diagEvidence = {};
+  startDiagnosis();
+}
+
+/* 현재 응답으로 격차·준비도를 계산한다. 미응답 항목은 0(경험 없음)으로 보되 미응답 수를 함께 반환한다. */
+function diagCompute(items, levels){
+  const rows = items.map(it=>{
+    const answered = levels[it.tag]!==undefined;
+    const cur = levels[it.tag]||0;
+    return {...it, cur, answered, gap: Math.max(it.target-cur,0)};
   });
-  return { pct: tags.length? Math.round(sum/tags.length*100) : 0, met, partial, none, total: tags.length };
+  const sumT = rows.reduce((s,r)=>s+r.target,0);
+  const sumC = rows.reduce((s,r)=>s+Math.min(r.cur,r.target),0);
+  return {
+    rows,
+    pct: sumT ? Math.round(sumC/sumT*100) : 0,
+    gaps: rows.filter(r=>r.gap>0).sort((a,b)=>b.gap-a.gap),
+    unanswered: rows.filter(r=>!r.answered).length,
+    evidence: rows.filter(r=>(diagEvidence[r.tag]||'').trim()).length
+  };
 }
-function renderSkillProfile(){
-  const box = document.getElementById('skill-profile');
-  const rated = Object.keys(userLevels);
-  document.getElementById('selected-skill-count').textContent = rated.length;
-  if(rated.length===0){ box.hidden = true; box.innerHTML=''; return; }
-  box.hidden = false;
-  const avgLv = (rated.reduce((s,t)=>s+userLevels[t],0)/rated.length).toFixed(1);
-  const famScores = FAMILIES.map(f=>{
-    const jobs = JOBS.filter(j=>j.family===f.id);
-    const avgPct = Math.round(jobs.reduce((s,j)=>s+jobReadiness(j).pct,0)/jobs.length);
-    return {f, avgPct};
-  }).sort((a,b)=>b.avgPct-a.avgPct);
+function diagGapAction(r){
+  const mods = CURRICULUM.filter(m=>m.covers.includes(r.tag)).map(m=>m.name);
+  const parts = [];
+  if(mods.length) parts.push(`교육과정: ${mods.join(', ')}`);
+  if(r.gap===1) parts.push('자기학습·사내 교육으로 보완');
+  else if(r.gap===2) parts.push('교육과정 이수 + OJT(현업 과제 수행)');
+  else parts.push('집중 교육과정 + 프로젝트 경험 + 멘토링');
+  if(r.cur>=0 && r.cur<5) parts.push(`다음 단계 Lv.${Math.max(r.cur,0)+1} 행동기준: ${diagBars(r.tag, r.cur+1)}`);
+  return parts;
+}
+function diagCareer(job, levels){
+  const ids = [...new Set([...job.related.similar, ...job.related.linked, ...job.related.expansion])].filter(id=>id!==job.id);
+  return ids.map(id=>{
+    const j = jobById(id); if(!j) return null;
+    const d = diagCompute(diagBuildItems(j), levels);
+    return {job:j, pct:d.pct, need:d.gaps.slice(0,3), unrated:d.rows.filter(r=>!r.answered).length};
+  }).filter(Boolean).sort((a,b)=>b.pct-a.pct);
+}
+function renderDiagResult(){
+  const box = document.getElementById('diag-result');
+  const job = jobById(diagJobId);
+  if(!job){ box.innerHTML=''; return; }
+  const ans = diagItems.filter(it=>diagLevels[it.tag]!==undefined).length;
+  const cnt = document.getElementById('diag-answered'); if(cnt) cnt.textContent = ans;
+  if(ans===0){ box.innerHTML = ''; return; }
+  const d = diagCompute(diagItems, diagLevels);
+  const career = diagCareer(job, diagLevels);
   box.innerHTML = `
     <div class="card profile-card">
-      <h3 style="margin:0;color:var(--primary-strong);">나의 역량 진단 결과</h3>
-      <div class="profile-stats">
-        <div><b>${rated.length}</b><span>진단 완료 항목</span></div>
-        <div><b>${avgLv}<span style="font-size:14px;color:var(--text-muted);">/3</span></b><span>평균 보유 수준</span></div>
-        <div><b>${famScores[0].avgPct}%</b><span>최고 준비도 · ${famScores[0].f.name}</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+        <h3 class="diag-h" style="margin:0;">역량 격차 진단 결과 · ${job.name}</h3>
+        <button type="button" class="btn-secondary" onclick="downloadResultPdf()">PDF로 받기</button>
       </div>
-      <div class="match-sec-label">직무군별 준비도</div>
-      ${famScores.map(fs=>`
-        <div class="fam-bar-row">
-          <span>${fs.f.name}</span>
-          <span class="fam-bar-track"><span class="fam-bar-fill" style="width:${fs.avgPct}%"></span></span>
-          <span class="fam-bar-pct">${fs.avgPct}%</span>
+      ${d.unanswered? `<p class="diag-warn">미응답 ${d.unanswered}개 항목은 "경험 없음"으로 계산되었습니다. 모두 응답하면 결과가 정확해집니다.</p>`:''}
+      <div class="profile-stats">
+        <div><b>${d.pct}%</b><span>요구수준 충족률</span></div>
+        <div><b>${d.rows.length-d.gaps.length}<span style="font-size:14px;color:var(--text-muted);">/${d.rows.length}</span></b><span>요구수준 충족 항목</span></div>
+        <div><b>${d.gaps.length}</b><span>격차 항목</span></div>
+        <div><b>${d.evidence}</b><span>증빙 기재 항목</span></div>
+      </div>
+      <p class="section-sub" style="margin:0 0 6px;">Skill Gap = 직무 요구수준(Target) − 현재 보유수준(Current). 본 결과는 자기진단(Level 1) 기반이며 검증되지 않았습니다.</p>
+
+      <div class="match-sec-label">1. 항목별 역량 격차</div>
+      ${d.rows.map(r=>`
+        <div class="gap-row">
+          <span class="gap-name">${r.tag}</span>
+          <span class="gap-track"><span class="gap-fill ${r.gap? 'lack':'ok'}" style="width:${r.cur/5*100}%"></span><i class="gap-mark" style="left:${r.target/5*100}%"></i></span>
+          <span class="gap-num">${r.answered? `${r.cur}/${r.target}` : '-'}</span>
+          <span class="gap-state ${r.gap?'lack':'ok'}">${r.gap? `격차 ${r.gap}`:'충족'}</span>
         </div>`).join('')}
+      <p class="section-sub" style="margin:6px 0 0;font-size:12px;">막대 = 현재 수준, 세로선 = 직무 요구수준 (현재/요구, 5단계)</p>
+
+      <div class="match-sec-label">2. 역량 개발방안 (격차가 큰 순)</div>
+      ${d.gaps.length? d.gaps.map(r=>`
+        <div class="dev-item"><b>${r.tag}</b> <span class="chip u1">Lv.${r.cur} → Lv.${r.target}</span>
+          <ul>${diagGapAction(r).map(p=>`<li>${p}</li>`).join('')}</ul></div>`).join('')
+        : `<p class="ok-item" style="display:inline-flex;">${icon('check')} 모든 항목이 요구수준을 충족했습니다. 상위 직무 준비를 검토해 보세요.</p>`}
+      <p class="section-sub" style="margin:6px 0 0;font-size:12px;">자격: ${job.info.cert} · 개발 후 재진단하여 변화를 확인합니다.</p>
+
+      <div class="match-sec-label">3. 인접·상위 직무 이동 가능성 (현재 응답 기준)</div>
+      ${career.length? career.map(c=>`
+        <div class="dev-item"><b>${c.job.name}</b> <span class="chip common">${c.pct}%</span>
+          <span class="section-sub" style="font-size:12px;">${c.need.length? '우선 보완: '+c.need.map(r=>`${r.tag}(Lv.${r.target} 요구)`).join(', ') : '요구수준 충족'}${c.unrated? ` · 미진단 항목 ${c.unrated}개 포함`:''}</span></div>`).join('')
+        : '<p class="empty-msg">연결된 직무가 없습니다.</p>'}
+
+      <div class="match-sec-label">4. 다음 진단 단계</div>
+      <p class="section-sub" style="margin:0;">Level 2(지식·사례·시나리오 평가)와 Level 3(실무과제·포트폴리오·전문가 평가)는 준비 중입니다. 자기진단 결과가 실제 수행능력과 다를 수 있으므로 증빙을 함께 관리하세요.</p>
     </div>`;
 }
-function renderSkillMatches(){
-  const box = document.getElementById('skill-search-result');
-  const rated = Object.keys(userLevels);
-  if(rated.length===0){
-    box.innerHTML = '<p class="empty-msg">위에서 태그를 클릭해 보유 수준을 표시하면, 나에게 맞는 직무가 이곳에 순위별로 진단됩니다.</p>';
-    return;
-  }
-  const scored = JOBS.map(j=>({job:j, ...jobReadiness(j)}))
-    .filter(s => matchMode==='AND' ? s.none.length===0 : (s.met.length+s.partial.length)>0)
-    .sort((a,b)=> b.pct-a.pct || b.met.length-a.met.length);
 
-  if(scored.length===0){
-    box.innerHTML = '<p class="empty-msg">조건에 맞는 직무가 없습니다. "하나라도 보유" 모드로 전환하거나 진단 항목을 늘려보세요.</p>';
-    return;
-  }
-  box.innerHTML = `<div class="match-list">${scored.map((s,i)=>`
-    <div class="match-card" style="animation-delay:${i*40}ms">
-      <div class="match-head">
-        <div class="match-name-wrap">
-          <span class="fam-tag">${famById(s.job.family).name}</span>
-          <h3>${s.job.name}</h3>
-        </div>
-        <div class="match-pct">${s.pct}%</div>
-      </div>
-      <div class="match-bar"><div class="match-bar-fill" style="width:${s.pct}%"></div></div>
-      <div class="match-sec-label">충족 (실무 가능 이상) · ${s.met.length}건</div>
-      <div>${s.met.length? s.met.map(t=>`<span class="chip common">${t}</span>`).join('') : '<span class="empty-msg" style="padding:0;display:inline-block;">해당 없음</span>'}</div>
-      <div class="match-sec-label">보완 필요(학습 중) · ${s.partial.length}건</div>
-      <div>${s.partial.length? s.partial.map(x=>`<span class="chip u1">${x.t} · Lv.${x.lv}→${LEVEL_REQUIRED}</span>`).join('') : '<span class="empty-msg" style="padding:0;display:inline-block;">해당 없음</span>'}</div>
-      <div class="match-sec-label">신규 학습 필요 · ${s.none.length}건</div>
-      <div>${s.none.length? s.none.map(t=>`<span class="chip">${t}</span>`).join('') : `<span class="ok-item" style="display:inline-flex;">${icon('check')} 모든 요구사항 충족</span>`}</div>
-      <button type="button" class="btn-secondary" style="margin-top:10px;" onclick="openJobDetail('${s.job.id}')">상세보기</button>
-    </div>`).join('')}</div>`;
+/* 진단 결과 PDF: 인쇄 전용 보고서를 만들어 브라우저 인쇄창(PDF로 저장)을 연다 */
+function downloadResultPdf(){
+  const job = jobById(diagJobId);
+  if(!job || diagItems.every(it=>diagLevels[it.tag]===undefined)){ alert('목표 직무를 선택하고 진단 항목에 응답해 주세요.'); return; }
+  const esc = s => String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const d = diagCompute(diagItems, diagLevels);
+  const career = diagCareer(job, diagLevels);
+  const now = new Date();
+  const dateStr = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')}`;
+  let el = document.getElementById('print-report');
+  if(!el){ el = document.createElement('div'); el.id = 'print-report'; document.body.appendChild(el); }
+  el.innerHTML = `
+    <h1>정보보호 직무역량 진단 결과</h1>
+    <div class="pr-meta">목표 직무: ${esc(job.name)} (${esc(famById(job.family).name)}) · 진단일: ${dateStr} · 진단 방식: 자기진단(Level 1)${d.unanswered? ` · 미응답 ${d.unanswered}개(경험 없음으로 계산)`:''}</div>
+    <h2>1. 요약</h2>
+    <table><tr><th>요구수준 충족률</th><th>충족 항목</th><th>격차 항목</th><th>증빙 기재</th></tr>
+    <tr><td>${d.pct}%</td><td>${d.rows.length-d.gaps.length}/${d.rows.length}</td><td>${d.gaps.length}</td><td>${d.evidence}</td></tr></table>
+    <h2>2. 항목별 역량 격차 (Gap = 요구수준 − 현재수준)</h2>
+    <table><tr><th>구분</th><th>항목</th><th style="width:46px;">요구</th><th style="width:46px;">현재</th><th style="width:46px;">격차</th><th>증빙</th></tr>
+    ${d.rows.map(r=>`<tr><td>${r.kind==='comp'?'역량':'지식·기술'}</td><td>${esc(r.tag)}</td><td>Lv.${r.target}</td><td>${r.answered?'Lv.'+r.cur:'-'}</td><td>${r.gap||'충족'}</td><td>${esc(diagEvidence[r.tag]||'')}</td></tr>`).join('')}</table>
+    <h2>3. 역량 개발방안</h2>
+    ${d.gaps.length? `<table><tr><th style="width:150px;">항목</th><th>개발방안</th></tr>${d.gaps.map(r=>`<tr><td>${esc(r.tag)}<br>Lv.${r.cur}→Lv.${r.target}</td><td>${diagGapAction(r).map(esc).join('<br>')}</td></tr>`).join('')}</table>` : '<p>모든 항목이 요구수준을 충족했습니다.</p>'}
+    <h2>4. 인접·상위 직무 이동 가능성</h2>
+    <table><tr><th>직무</th><th style="width:60px;">충족률</th><th>우선 보완</th></tr>
+    ${career.map(c=>`<tr><td>${esc(c.job.name)}</td><td>${c.pct}%</td><td>${c.need.length? c.need.map(r=>`${esc(r.tag)}(Lv.${r.target})`).join(', ') : '충족'}${c.unrated? ` (미진단 ${c.unrated}개)`:''}</td></tr>`).join('')}</table>
+    <div class="pr-note">본 결과는 자기진단 기반의 프로토타입 산출물이며 공식 평가·인증 결과가 아닙니다. 요구 숙련도는 예시 기준값이며 전문가 검증이 필요합니다.</div>`;
+  document.body.classList.add('printing-report');
+  const cleanup = () => { document.body.classList.remove('printing-report'); window.removeEventListener('afterprint', cleanup); };
+  window.addEventListener('afterprint', cleanup);
+  window.print(); // 인쇄창에서 대상을 "PDF로 저장"으로 선택
 }
 
 /* ===================== 직무 비교 ===================== */
@@ -1548,7 +1690,7 @@ function init(){
   renderTreeFamilies();
   fillFamilySelect(document.getElementById('job-family-filter'), true);
   renderJobsList();
-  renderSkillTags();
+  initDiagnosis();
   fillJobSelect(document.getElementById('cmp-1'),'직무 1 선택');
   fillJobSelect(document.getElementById('cmp-2'),'직무 2 선택');
   fillJobSelect(document.getElementById('cmp-3'),'직무 3 선택(선택)');
