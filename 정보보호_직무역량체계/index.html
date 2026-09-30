@@ -424,7 +424,7 @@ button:active,.job-chip:active,.chip.tagbtn:active{transform:scale(.96);}
 .pdf-ready-name{font-size:12px;color:var(--text-muted);word-break:break-all;}
 .pdf-ready-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
 .pdf-ready-btns .btn-secondary{text-decoration:none;display:inline-block;}
-/* PDF 보고서: 화면 밖에 고정 폭으로 렌더링해 html2pdf가 캡처한다(모바일 포함). 인쇄창은 라이브러리 로드 실패 시 대체 수단. */
+/* 인쇄창 대체용 보고서(PDF 생성 실패 시에만 사용). 평상시에는 화면 밖에 숨겨 둔다. */
 #print-report{position:fixed;left:-10000px;top:0;}
 #print-report .pr-page{width:720px;box-sizing:border-box;padding:24px;background:#fff;color:#000;font-size:12px;line-height:1.55;font-family:inherit;}
 #print-report h1{font-size:20px;margin:0 0 4px;border-bottom:2px solid #000;padding-bottom:6px;}
@@ -1546,55 +1546,133 @@ function showPdfReady(blob, fname){
   const sb = document.getElementById('pdf-share-btn');
   if(sb) sb.onclick = () => navigator.share({files:[file], title:fname}).catch(()=>{});
 }
-function loadHtml2Pdf(){
-  if(window.html2pdf) return Promise.resolve();
+function loadJsPdf(){
+  if(window.jspdf) return Promise.resolve();
   return new Promise((res,rej)=>{
     const sc = document.createElement('script');
-    sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-    sc.onload = res; sc.onerror = () => rej(new Error('html2pdf 로드 실패'));
+    sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    sc.onload = res; sc.onerror = () => rej(new Error('jsPDF 로드 실패'));
     document.head.appendChild(sc);
   });
 }
-/* 진단 결과 PDF: 보고서를 만들어 PDF 파일로 직접 저장한다(html2pdf, 실패 시 인쇄창) */
+/* 진단 결과 보고서 내용을 화면과 무관한 데이터(블록 목록)로 만든다. PDF·인쇄 대체 양쪽이 이 데이터를 쓴다. */
+function buildDiagReport(job, dateStr){
+  const d = diagCompute(diagItems, diagLevels);
+  const career = diagCareer(job, diagLevels);
+  const B = [];
+  B.push({t:'h1', x:'정보보호 직무역량 진단 결과'});
+  B.push({t:'meta', x:`목표 직무: ${job.name} (${famById(job.family).name}) · 진단일: ${dateStr} · 진단 방식: 자기진단(Level 1)${d.unanswered? ` · 미응답 ${d.unanswered}개(경험 없음으로 계산)`:''}`});
+  B.push({t:'h2', x:'1. 요약'});
+  B.push({t:'table', head:['요구수준 충족률','충족 항목','격차 항목','증빙 기재'], fr:[.25,.25,.25,.25],
+    rows:[[`${d.pct}%`, `${d.rows.length-d.gaps.length}/${d.rows.length}`, `${d.gaps.length}`, `${d.evidence}`]]});
+  B.push({t:'h2', x:'2. 항목별 역량 격차 (Gap = 요구수준 − 현재수준)'});
+  B.push({t:'table', head:['구분','항목','요구','현재','격차','증빙'], fr:[.12,.32,.08,.08,.09,.31],
+    rows:d.rows.map(r=>[r.kind==='comp'?'역량':'지식·기술', r.tag, `Lv.${r.target}`, r.answered?`Lv.${r.cur}`:'-', r.gap?String(r.gap):'충족', diagEvidence[r.tag]||''])});
+  B.push({t:'h2', x:'3. 역량 개발방안'});
+  if(d.gaps.length) B.push({t:'table', head:['항목','개발방안'], fr:[.26,.74],
+    rows:d.gaps.map(r=>[`${r.tag}\nLv.${r.cur}→Lv.${r.target}`, diagGapAction(r).join('\n')])});
+  else B.push({t:'p', x:'모든 항목이 요구수준을 충족했습니다.'});
+  B.push({t:'h2', x:'4. 인접·상위 직무 이동 가능성'});
+  B.push({t:'table', head:['직무','충족률','우선 보완'], fr:[.3,.12,.58],
+    rows:career.map(c=>[c.job.name, `${c.pct}%`, (c.need.length? c.need.map(r=>`${r.tag}(Lv.${r.target})`).join(', ') : '충족') + (c.unrated? ` (미진단 ${c.unrated}개)`:'')])});
+  B.push({t:'note', x:'본 결과는 자기진단 기반의 프로토타입 산출물이며 공식 평가·인증 결과가 아닙니다. 요구 숙련도는 예시 기준값이며 전문가 검증이 필요합니다.'});
+  return B;
+}
+/* 블록 목록을 캔버스에 직접 그려 A4 페이지 이미지로 만든다(DOM 캡처를 쓰지 않아 모바일에서도 안정적). */
+function renderReportPages(blocks){
+  const S = 2, W = 794, H = 1123, M = 44, CW = W - M*2;
+  const FONT = '"Noto Sans KR","Malgun Gothic","Apple SD Gothic Neo","Nanum Gothic",sans-serif';
+  const pages = []; let cv, cx, y;
+  const newPage = () => {
+    cv = document.createElement('canvas'); cv.width = W*S; cv.height = H*S;
+    cx = cv.getContext('2d'); cx.scale(S,S); cx.fillStyle = '#fff'; cx.fillRect(0,0,W,H);
+    cx.textBaseline = 'top'; pages.push(cv); y = M;
+  };
+  const font = (px, bold) => { cx.font = `${bold?'bold ':''}${px}px ${FONT}`; };
+  const wrap = (text, maxW) => {
+    const out = [];
+    String(text).split('\n').forEach(par=>{
+      let line = '';
+      for(const ch of par){
+        if(cx.measureText(line+ch).width > maxW && line){ out.push(line); line = ch; } else line += ch;
+      }
+      out.push(line);
+    });
+    return out;
+  };
+  const drawLines = (lines, x, yy, lh) => lines.forEach((l,i)=>cx.fillText(l, x, yy + i*lh));
+  const PAD = 6, LH = 17;
+  newPage();
+  blocks.forEach(b=>{
+    if(b.t==='h1'){
+      font(22,true); cx.fillStyle='#000'; cx.fillText(b.x, M, y); y += 32;
+      cx.fillRect(M, y, CW, 2); y += 12;
+    } else if(b.t==='meta' || b.t==='p' || b.t==='note'){
+      const px = b.t==='note'?11.5:13; font(px,false); cx.fillStyle = b.t==='p'?'#000':'#555';
+      const lines = wrap(b.x, CW), lh = px+5;
+      if(y + lines.length*lh > H-M) newPage();
+      if(b.t==='note') y += 10;
+      font(px,false); cx.fillStyle = b.t==='p'?'#000':'#555';
+      drawLines(lines, M, y, lh); y += lines.length*lh + 8;
+    } else if(b.t==='h2'){
+      if(y + 60 > H-M) newPage();
+      y += 8; font(15,true); cx.fillStyle='#000'; cx.fillText(b.x, M, y); y += 26;
+    } else if(b.t==='table'){
+      const xs = []; let acc = M;
+      const ws = b.fr.map(f=>f*CW);
+      ws.forEach(w=>{ xs.push(acc); acc += w; });
+      const drawRow = (cells, header) => {
+        font(12.5, header);
+        const cl = cells.map((c,i)=>wrap(c, ws[i]-PAD*2));
+        const rh = Math.max(...cl.map(l=>l.length))*LH + PAD*2 - 2;
+        if(y + rh > H-M) newPage();
+        cells.forEach((c,i)=>{
+          if(header){ cx.fillStyle='#eee'; cx.fillRect(xs[i], y, ws[i], rh); }
+          cx.strokeStyle='#888'; cx.lineWidth=1; cx.strokeRect(xs[i]+.5, y+.5, ws[i], rh);
+          cx.fillStyle='#000'; font(12.5, header); drawLines(cl[i], xs[i]+PAD, y+PAD, LH);
+        });
+        y += rh;
+      };
+      drawRow(b.head, true);
+      b.rows.forEach(r=>drawRow(r,false));
+      y += 10;
+    }
+  });
+  return pages;
+}
+function pagesToPdfBlob(pages){
+  const doc = new window.jspdf.jsPDF({unit:'mm', format:'a4', orientation:'portrait'});
+  pages.forEach((cv,i)=>{
+    if(i) doc.addPage();
+    doc.addImage(cv.toDataURL('image/jpeg',.92), 'JPEG', 0, 0, 210, 297);
+  });
+  return doc.output('blob');
+}
+/* 진단 결과 PDF: 보고서를 캔버스로 직접 그려 PDF 파일로 만든다(실패 시 인쇄창으로 대체) */
 async function downloadResultPdf(){
   const job = jobById(diagJobId);
   if(!job || diagItems.every(it=>diagLevels[it.tag]===undefined)){ alert('목표 직무를 선택하고 진단 항목에 응답해 주세요.'); return; }
-  const esc = s => String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-  const d = diagCompute(diagItems, diagLevels);
-  const career = diagCareer(job, diagLevels);
   const now = new Date();
   const dateStr = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')}`;
-  let el = document.getElementById('print-report');
-  if(!el){ el = document.createElement('div'); el.id = 'print-report'; document.body.appendChild(el); }
-  el.innerHTML = `<div class="pr-page">
-    <h1>정보보호 직무역량 진단 결과</h1>
-    <div class="pr-meta">목표 직무: ${esc(job.name)} (${esc(famById(job.family).name)}) · 진단일: ${dateStr} · 진단 방식: 자기진단(Level 1)${d.unanswered? ` · 미응답 ${d.unanswered}개(경험 없음으로 계산)`:''}</div>
-    <h2>1. 요약</h2>
-    <table><tr><th>요구수준 충족률</th><th>충족 항목</th><th>격차 항목</th><th>증빙 기재</th></tr>
-    <tr><td>${d.pct}%</td><td>${d.rows.length-d.gaps.length}/${d.rows.length}</td><td>${d.gaps.length}</td><td>${d.evidence}</td></tr></table>
-    <h2>2. 항목별 역량 격차 (Gap = 요구수준 − 현재수준)</h2>
-    <table><tr><th>구분</th><th>항목</th><th style="width:46px;">요구</th><th style="width:46px;">현재</th><th style="width:46px;">격차</th><th>증빙</th></tr>
-    ${d.rows.map(r=>`<tr><td>${r.kind==='comp'?'역량':'지식·기술'}</td><td>${esc(r.tag)}</td><td>Lv.${r.target}</td><td>${r.answered?'Lv.'+r.cur:'-'}</td><td>${r.gap||'충족'}</td><td>${esc(diagEvidence[r.tag]||'')}</td></tr>`).join('')}</table>
-    <h2>3. 역량 개발방안</h2>
-    ${d.gaps.length? `<table><tr><th style="width:150px;">항목</th><th>개발방안</th></tr>${d.gaps.map(r=>`<tr><td>${esc(r.tag)}<br>Lv.${r.cur}→Lv.${r.target}</td><td>${diagGapAction(r).map(esc).join('<br>')}</td></tr>`).join('')}</table>` : '<p>모든 항목이 요구수준을 충족했습니다.</p>'}
-    <h2>4. 인접·상위 직무 이동 가능성</h2>
-    <table><tr><th>직무</th><th style="width:60px;">충족률</th><th>우선 보완</th></tr>
-    ${career.map(c=>`<tr><td>${esc(c.job.name)}</td><td>${c.pct}%</td><td>${c.need.length? c.need.map(r=>`${esc(r.tag)}(Lv.${r.target})`).join(', ') : '충족'}${c.unrated? ` (미진단 ${c.unrated}개)`:''}</td></tr>`).join('')}</table>
-    <div class="pr-note">본 결과는 자기진단 기반의 프로토타입 산출물이며 공식 평가·인증 결과가 아닙니다. 요구 숙련도는 예시 기준값이며 전문가 검증이 필요합니다.</div></div>`;
+  const blocks = buildDiagReport(job, dateStr);
   const fname = `역량진단결과_${job.name}_${dateStr.replace(/\./g,'')}.pdf`;
   const btn = document.querySelector('#diag-result .card button.btn-secondary');
   if(btn){ btn.disabled = true; btn.textContent = 'PDF 만드는 중...'; }
   try{
-    await loadHtml2Pdf();
-    const blob = await html2pdf().set({
-      margin:10, image:{type:'jpeg',quality:.95},
-      html2canvas:{scale:2, useCORS:true, backgroundColor:'#fff', windowWidth:720},
-      jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
-      pagebreak:{mode:['css','legacy'], avoid:'table'}
-    }).from(el.firstElementChild).outputPdf('blob');
-    showPdfReady(blob, fname);
+    await loadJsPdf();
+    if(document.fonts && document.fonts.ready) await document.fonts.ready;
+    showPdfReady(pagesToPdfBlob(renderReportPages(blocks)), fname);
   }catch(e){
     // 라이브러리 로드·생성 실패 시 브라우저 인쇄창으로 대체
+    const esc = s => String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    let el = document.getElementById('print-report');
+    if(!el){ el = document.createElement('div'); el.id = 'print-report'; document.body.appendChild(el); }
+    el.innerHTML = '<div class="pr-page">' + blocks.map(b=>
+      b.t==='h1' ? `<h1>${esc(b.x)}</h1>` : b.t==='h2' ? `<h2>${esc(b.x)}</h2>` :
+      b.t==='meta' ? `<div class="pr-meta">${esc(b.x)}</div>` : b.t==='note' ? `<div class="pr-note">${esc(b.x)}</div>` :
+      b.t==='p' ? `<p>${esc(b.x)}</p>` :
+      `<table><tr>${b.head.map(h=>`<th>${esc(h)}</th>`).join('')}</tr>${b.rows.map(r=>`<tr>${r.map(c=>`<td>${esc(c).replace(/\n/g,'<br>')}</td>`).join('')}</tr>`).join('')}</table>`
+    ).join('') + '</div>';
     document.body.classList.add('printing-report');
     const cleanup = () => { document.body.classList.remove('printing-report'); window.removeEventListener('afterprint', cleanup); };
     window.addEventListener('afterprint', cleanup);
