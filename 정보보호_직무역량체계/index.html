@@ -422,6 +422,10 @@ button:active,.job-chip:active,.chip.tagbtn:active{transform:scale(.96);}
 #pdf-ready{position:fixed;left:0;right:0;bottom:0;z-index:9999;display:flex;justify-content:center;padding:12px;}
 .pdf-ready-card{width:100%;max-width:520px;background:var(--surface);color:var(--text);border:1.5px solid var(--primary);border-radius:12px;padding:14px 16px;box-shadow:0 8px 28px rgba(15,23,42,.28);display:flex;flex-direction:column;gap:6px;}
 .pdf-ready-name{font-size:12px;color:var(--text-muted);word-break:break-all;}
+.pdf-ready-warn{font-size:12px;color:var(--cmp-a);}
+#report-images{position:fixed;inset:0;z-index:10000;background:#e5e7eb;overflow:auto;-webkit-overflow-scrolling:touch;padding:0 0 16px;}
+#report-images .ri-bar{position:sticky;top:0;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);color:var(--text);font-size:13px;border-bottom:1px solid var(--border);}
+#report-images img{display:block;width:100%;max-width:820px;margin:12px auto 0;background:#fff;-webkit-touch-callout:default;}
 .pdf-ready-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
 .pdf-ready-btns .btn-secondary{text-decoration:none;display:inline-block;}
 /* 인쇄창 대체용 보고서(PDF 생성 실패 시에만 사용). 평상시에는 화면 밖에 숨겨 둔다. */
@@ -1522,7 +1526,7 @@ function renderDiagResult(){
 }
 
 /* 완성된 PDF를 열기/저장/공유할 수 있는 안내창을 띄운다. 모바일은 자동 다운로드가 보이지 않는 경우가 많아 직접 누르게 한다. */
-function showPdfReady(blob, fname){
+function showPdfReady(blob, fname, pageUrls){
   const url = URL.createObjectURL(blob);
   const file = new File([blob], fname, {type:'application/pdf'});
   const canShare = !!(navigator.canShare && navigator.canShare({files:[file]}));
@@ -1534,17 +1538,31 @@ function showPdfReady(blob, fname){
     <div class="pdf-ready-card" role="dialog" aria-label="PDF 준비 완료">
       <b>PDF가 준비되었습니다</b>
       <span class="pdf-ready-name">${fname}</span>
+      ${/KAKAOTALK/i.test(navigator.userAgent)? '<span class="pdf-ready-warn">카카오톡 앱에서는 파일 저장이 막혀 있을 수 있습니다. "이미지로 보기"에서 이미지를 길게 눌러 저장하거나, 우측 하단 메뉴의 "다른 브라우저로 열기"를 이용하세요.</span>':''}
       <div class="pdf-ready-btns">
         <a class="btn-secondary" href="${url}" target="_blank" rel="noopener">PDF 열기</a>
         <a class="btn-secondary" href="${url}" download="${fname}">파일로 저장</a>
         ${canShare? '<button type="button" class="btn-secondary" id="pdf-share-btn">공유·저장</button>':''}
+        <button type="button" class="btn-secondary" id="pdf-img-btn">이미지로 보기</button>
         <button type="button" class="btn-secondary" id="pdf-close-btn">닫기</button>
       </div>
     </div>`;
   document.body.appendChild(box);
+  document.getElementById('pdf-img-btn').onclick = () => showReportImages(pageUrls, fname);
   document.getElementById('pdf-close-btn').onclick = () => box.remove();
   const sb = document.getElementById('pdf-share-btn');
   if(sb) sb.onclick = () => navigator.share({files:[file], title:fname}).catch(()=>{});
+}
+/* 파일 저장이 막힌 환경(카카오톡 인앱 등)용: 결과서 페이지를 이미지로 보여 주고 길게 눌러 저장하게 한다. */
+function showReportImages(urls, fname){
+  let ov = document.getElementById('report-images');
+  if(ov) ov.remove();
+  ov = document.createElement('div');
+  ov.id = 'report-images';
+  ov.innerHTML = `<div class="ri-bar"><span>이미지를 길게 눌러 "사진에 저장"을 선택하세요</span><button type="button" class="btn-secondary" id="ri-close">닫기</button></div>` +
+    urls.map((u,i)=>`<img src="${u}" alt="${fname} ${i+1}쪽">`).join('');
+  document.body.appendChild(ov);
+  document.getElementById('ri-close').onclick = () => ov.remove();
 }
 function loadJsPdf(){
   if(window.jspdf) return Promise.resolve();
@@ -1583,10 +1601,12 @@ function renderReportPages(blocks){
   const S = 2, W = 794, H = 1123, M = 44, CW = W - M*2;
   const FONT = '"Noto Sans KR","Malgun Gothic","Apple SD Gothic Neo","Nanum Gothic",sans-serif';
   const pages = []; let cv, cx, y;
+  const flush = () => { if(cv){ pages.push(cv.toDataURL('image/jpeg',.92)); cv.width = cv.height = 0; cv = null; } }; // iOS 캔버스 메모리 한도 때문에 페이지마다 바로 이미지로 바꾸고 비운다
   const newPage = () => {
+    flush();
     cv = document.createElement('canvas'); cv.width = W*S; cv.height = H*S;
     cx = cv.getContext('2d'); cx.scale(S,S); cx.fillStyle = '#fff'; cx.fillRect(0,0,W,H);
-    cx.textBaseline = 'top'; pages.push(cv); y = M;
+    cx.textBaseline = 'top'; y = M;
   };
   const font = (px, bold) => { cx.font = `${bold?'bold ':''}${px}px ${FONT}`; };
   const wrap = (text, maxW) => {
@@ -1638,13 +1658,14 @@ function renderReportPages(blocks){
       y += 10;
     }
   });
+  flush();
   return pages;
 }
 function pagesToPdfBlob(pages){
   const doc = new window.jspdf.jsPDF({unit:'mm', format:'a4', orientation:'portrait'});
-  pages.forEach((cv,i)=>{
+  pages.forEach((url,i)=>{
     if(i) doc.addPage();
-    doc.addImage(cv.toDataURL('image/jpeg',.92), 'JPEG', 0, 0, 210, 297);
+    doc.addImage(url, 'JPEG', 0, 0, 210, 297);
   });
   return doc.output('blob');
 }
@@ -1661,7 +1682,8 @@ async function downloadResultPdf(){
   try{
     await loadJsPdf();
     if(document.fonts && document.fonts.ready) await document.fonts.ready;
-    showPdfReady(pagesToPdfBlob(renderReportPages(blocks)), fname);
+    const pages = renderReportPages(blocks);
+    showPdfReady(pagesToPdfBlob(pages), fname, pages);
   }catch(e){
     // 라이브러리 로드·생성 실패 시 브라우저 인쇄창으로 대체
     const esc = s => String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
