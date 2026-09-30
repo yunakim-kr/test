@@ -1,0 +1,14 @@
+# 환경변수 / API 키
+.env
+*.env
+.env.*
+
+# Python
+__pycache__/
+*.pyc
+
+# 실제 주간보고 예시 데이터(실명 포함) - 퍼블릭 저장소 비공개 처리
+weekly_report/archive_251121/
+weekly_report/archive_9월4주_260928/
+weekly_report/archive_manual_txt/
+weekly_report/sample_input/
