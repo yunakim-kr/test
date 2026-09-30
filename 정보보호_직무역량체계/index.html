@@ -419,6 +419,11 @@ button:active,.job-chip:active,.chip.tagbtn:active{transform:scale(.96);}
 .gap-state.lack{color:var(--cmp-a);}
 .dev-item{padding:8px 0;border-bottom:1px dashed var(--border);font-size:13px;}
 .dev-item ul{margin:4px 0 0;padding-left:18px;font-size:12.6px;color:var(--text-muted);}
+#pdf-ready{position:fixed;left:0;right:0;bottom:0;z-index:9999;display:flex;justify-content:center;padding:12px;}
+.pdf-ready-card{width:100%;max-width:520px;background:var(--surface);color:var(--text);border:1.5px solid var(--primary);border-radius:12px;padding:14px 16px;box-shadow:0 8px 28px rgba(15,23,42,.28);display:flex;flex-direction:column;gap:6px;}
+.pdf-ready-name{font-size:12px;color:var(--text-muted);word-break:break-all;}
+.pdf-ready-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
+.pdf-ready-btns .btn-secondary{text-decoration:none;display:inline-block;}
 /* PDF 보고서: 화면 밖에 고정 폭으로 렌더링해 html2pdf가 캡처한다(모바일 포함). 인쇄창은 라이브러리 로드 실패 시 대체 수단. */
 #print-report{position:fixed;left:-10000px;top:0;}
 #print-report .pr-page{width:720px;box-sizing:border-box;padding:24px;background:#fff;color:#000;font-size:12px;line-height:1.55;font-family:inherit;}
@@ -1516,6 +1521,31 @@ function renderDiagResult(){
     </div>`;
 }
 
+/* 완성된 PDF를 열기/저장/공유할 수 있는 안내창을 띄운다. 모바일은 자동 다운로드가 보이지 않는 경우가 많아 직접 누르게 한다. */
+function showPdfReady(blob, fname){
+  const url = URL.createObjectURL(blob);
+  const file = new File([blob], fname, {type:'application/pdf'});
+  const canShare = !!(navigator.canShare && navigator.canShare({files:[file]}));
+  let box = document.getElementById('pdf-ready');
+  if(box) box.remove();
+  box = document.createElement('div');
+  box.id = 'pdf-ready';
+  box.innerHTML = `
+    <div class="pdf-ready-card" role="dialog" aria-label="PDF 준비 완료">
+      <b>PDF가 준비되었습니다</b>
+      <span class="pdf-ready-name">${fname}</span>
+      <div class="pdf-ready-btns">
+        <a class="btn-secondary" href="${url}" target="_blank" rel="noopener">PDF 열기</a>
+        <a class="btn-secondary" href="${url}" download="${fname}">파일로 저장</a>
+        ${canShare? '<button type="button" class="btn-secondary" id="pdf-share-btn">공유·저장</button>':''}
+        <button type="button" class="btn-secondary" id="pdf-close-btn">닫기</button>
+      </div>
+    </div>`;
+  document.body.appendChild(box);
+  document.getElementById('pdf-close-btn').onclick = () => box.remove();
+  const sb = document.getElementById('pdf-share-btn');
+  if(sb) sb.onclick = () => navigator.share({files:[file], title:fname}).catch(()=>{});
+}
 function loadHtml2Pdf(){
   if(window.html2pdf) return Promise.resolve();
   return new Promise((res,rej)=>{
@@ -1552,20 +1582,25 @@ async function downloadResultPdf(){
     ${career.map(c=>`<tr><td>${esc(c.job.name)}</td><td>${c.pct}%</td><td>${c.need.length? c.need.map(r=>`${esc(r.tag)}(Lv.${r.target})`).join(', ') : '충족'}${c.unrated? ` (미진단 ${c.unrated}개)`:''}</td></tr>`).join('')}</table>
     <div class="pr-note">본 결과는 자기진단 기반의 프로토타입 산출물이며 공식 평가·인증 결과가 아닙니다. 요구 숙련도는 예시 기준값이며 전문가 검증이 필요합니다.</div></div>`;
   const fname = `역량진단결과_${job.name}_${dateStr.replace(/\./g,'')}.pdf`;
+  const btn = document.querySelector('#diag-result .card button.btn-secondary');
+  if(btn){ btn.disabled = true; btn.textContent = 'PDF 만드는 중...'; }
   try{
     await loadHtml2Pdf();
-    await html2pdf().set({
-      margin:10, filename:fname, image:{type:'jpeg',quality:.95},
+    const blob = await html2pdf().set({
+      margin:10, image:{type:'jpeg',quality:.95},
       html2canvas:{scale:2, useCORS:true, backgroundColor:'#fff', windowWidth:720},
       jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
       pagebreak:{mode:['css','legacy'], avoid:'table'}
-    }).from(el.firstElementChild).save();
+    }).from(el.firstElementChild).outputPdf('blob');
+    showPdfReady(blob, fname);
   }catch(e){
     // 라이브러리 로드·생성 실패 시 브라우저 인쇄창으로 대체
     document.body.classList.add('printing-report');
     const cleanup = () => { document.body.classList.remove('printing-report'); window.removeEventListener('afterprint', cleanup); };
     window.addEventListener('afterprint', cleanup);
     window.print();
+  }finally{
+    if(btn){ btn.disabled = false; btn.textContent = 'PDF로 받기'; }
   }
 }
 
