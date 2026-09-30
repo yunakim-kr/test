@@ -1,6 +1,7 @@
 import hmac
 import io
 import os
+import time
 
 import streamlit as st
 from anthropic import APIError, APIStatusError
@@ -10,6 +11,7 @@ import problem_proposal as pp
 MAX_FILES = 8
 MAX_FILE_BYTES = 30 * 1024
 MAX_RUNS_PER_SESSION = 5
+MAX_LOGIN_FAILS = 5
 
 st.set_page_config(page_title="부서 공통 문제 해결 제안서", page_icon="📑", layout="centered")
 
@@ -25,19 +27,34 @@ def secret(name: str):
 
 
 def check_access() -> bool:
-    """APP_PASSWORD가 설정돼 있으면 접속 코드를 요구한다. (공개 배포 시 API 비용 보호)"""
+    """앱 비밀번호(APP_PASSWORD)를 아는 사람만 사용할 수 있게 한다.
+
+    비밀번호가 설정되지 않았으면 앱을 열지 않는다. (설정 누락으로 API 키가 무방비로 노출되는 것을 막음)
+    """
     expected = secret("APP_PASSWORD")
     if not expected:
-        return True
+        st.error("앱 비밀번호(APP_PASSWORD)가 설정되지 않아 사용할 수 없습니다. 관리자에게 문의하세요.")
+        return False
     if st.session_state.get("authed"):
         return True
-    code = st.text_input("접속 코드", type="password")
-    if code:
+
+    fails = st.session_state.get("login_fails", 0)
+    if fails >= MAX_LOGIN_FAILS:
+        st.error("비밀번호를 여러 번 틀렸습니다. 페이지를 새로 고친 뒤 다시 시도하세요.")
+        return False
+
+    with st.form("login"):
+        code = st.text_input("앱 비밀번호", type="password")
+        submitted = st.form_submit_button("들어가기")
+    if submitted:
         if hmac.compare_digest(code.encode(), str(expected).encode()):
             st.session_state["authed"] = True
+            st.session_state["login_fails"] = 0
             st.rerun()
         else:
-            st.error("접속 코드가 맞지 않습니다.")
+            st.session_state["login_fails"] = fails + 1
+            time.sleep(1)  # 무차별 대입 지연
+            st.error(f"비밀번호가 맞지 않습니다. ({fails + 1}/{MAX_LOGIN_FAILS})")
     return False
 
 
